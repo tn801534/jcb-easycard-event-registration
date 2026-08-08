@@ -188,3 +188,58 @@ python -m pytest tests/test_integration.py -v
 ## 免責聲明
 
 本程式僅供個人學習與研究使用。使用者應遵守 JCB 與悠遊卡公司之服務條款，自負使用責任。
+## Android APK 打包
+
+### 需求
+- Linux 環境（或 WSL）
+- Docker（可選，推薦使用 docker 避免環境問題）
+- 或依照 [Buildozer 安裝說明](https://buildozer.readthedocs.io/) 安裝依賴
+
+### 方法一：使用 Docker（最簡單）
+
+```bash
+# 在專案目錄下執行
+docker run --interactive --tty --rm \
+    --volume "$(pwd):/home/user/hostcwd" \
+    --volume ~/.buildozer:/home/user/.buildozer \
+    --entrypoint /bin/bash \
+    kivy/buildozer:latest \
+    -c "yes | buildozer android debug"
+```
+
+### 方法二：直接使用 Buildozer
+
+```bash
+# 1. 安裝 Buildozer
+pip install buildozer
+
+# 2. 編譯 APK
+buildozer android debug
+
+# 3. APK 產出在 bin/ 目錄
+ls bin/
+```
+
+### 方法三：使用 python-for-android
+
+```bash
+# 直接使用 p4a 編譯
+p4a apk --requirements python3,kivy,requests_async,configobj,lxml,asyncio_read_write_lock \
+    --private . \
+    --package com.bless7103.jcbeasycard \
+    --name "JCB悠遊卡登錄" \
+    --version 1.0.0 \
+    --bootstrap=sdl2 \
+    --arch arm64-v8a \
+    --permission INTERNET
+```
+
+### 產出檔案
+- `bin/JCB悠遊卡登錄-1.0.0-*-debug.apk` — 除錯版 APK
+- 安裝至 Android 裝置後，`main_android.py` 會自動啟動 Kivy 圖形介面
+
+### 注意事項
+- Android 版使用 `main_android.py` 作為入口（Kivy GUI）
+- 設定檔 `jcb.ini` 需一併打包至 APK 內部
+- 需要 Android 6.0+ (API 21)
+- 僅支援 arm64-v8a 架構
