@@ -6,6 +6,7 @@ PC Python 版本，支援多卡批次登錄與 Line Notify 通知
 
 import datetime
 import logging
+import logging.handlers
 import os
 import sys
 import traceback
@@ -22,19 +23,25 @@ from jcb_recaptcha import CaptchaSolver
 # ===== 日誌設定 =====
 format_str = '%(asctime)s.%(msecs)03d %(levelname)s %(message)s'
 date_format = '%Y-%m-%d %H:%M:%S'
-log_file = os.path.splitext(os.path.basename(__file__))[0] + '.log'
+
+# 使用 logs/ 目錄存放日誌，並依日期輪替（保留 30 天）
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'jcb.log')
+
+file_handler = logging.handlers.TimedRotatingFileHandler(
+    log_file, when='midnight', backupCount=30, encoding='utf-8'
+)
+file_handler.setFormatter(logging.Formatter(format_str, datefmt=date_format))
+
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(logging.Formatter(format_str, datefmt=date_format))
 
 logging.basicConfig(
     level=logging.INFO,
-    format=format_str,
-    datefmt=date_format,
-    handlers=[
-        logging.FileHandler(log_file, 'a', 'utf-8'),
-        logging.StreamHandler(sys.stdout),
-    ]
+    handlers=[file_handler, stream_handler],
 )
 logger = logging.getLogger(__name__)
-
 
 class JCBApp:
     """JCB 悠遊卡登錄應用程式主類別"""
