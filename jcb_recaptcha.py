@@ -5,14 +5,12 @@ jcb_recaptcha.py — reCAPTCHA 處理模組
 """
 
 import datetime
-import json
 import logging
 import pprint
 import traceback
 
 import asyncio
 import requests_async
-from recaptchav2proxyless import recaptchaV2Proxyless
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +57,7 @@ class CaptchaSolver:
         """
         async with semaphore:
             try:
+                from recaptchav2proxyless import recaptchaV2Proxyless
                 result = recaptchaV2Proxyless(
                     self.api_key,
                     self.PAGE_URL,

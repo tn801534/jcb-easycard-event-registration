@@ -119,7 +119,7 @@ class JCBAPI:
                 logger.info(f'請求異常 {inspect.stack()[0][3]}')
                 logger.info(f'{pprint.pformat(e)}')
                 logger.info(f'{traceback.format_exc()}')
-                return False, f'請求異常: {e}', None
+                return False, f'請求異常: {e}', False
 
     def _parse_response(self, response_text, card_info):
         """解析 API 回應
@@ -164,3 +164,4 @@ class JCBAPI:
         logger.info(f'API 回應: {card_info}')
         logger.info(f'回應內容: {response_text[:200]}')
         return True, f'API 回應: {response_text[:100]}', False
+

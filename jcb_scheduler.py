@@ -5,6 +5,7 @@ jcb_scheduler.py — 排程與重試邏輯
 """
 
 import datetime
+import asyncio
 import logging
 import time
 
@@ -63,4 +64,3 @@ class Scheduler:
 
 
 # 需要在 module 層級 import asyncio
-import asyncio

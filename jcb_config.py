@@ -6,6 +6,7 @@ jcb_config.py — 設定檔讀取模組
 
 import os
 import sys
+import ast
 import datetime
 from configobj import ConfigObj
 
@@ -43,19 +44,48 @@ class Config:
         self.get_token_semaphore = int(cfg.get("get_token_semaphore", 30))
         self.shoot_semaphore = int(cfg.get("shoot_semaphore", 7))
 
-        # 多組卡片設定
-        self.txtCreditCardVal = cfg.as_list('txtCreditCardVal')
-        self.txtEasyCardVal = cfg.as_list('txtEasyCardVal')
+        # 多組卡片設定 — 用 ast.literal_eval 把字串轉成 list
+        self.txtCreditCardVal = self._parse_list_field(cfg, 'txtCreditCardVal')
+        self.txtEasyCardVal = self._parse_list_field(cfg, 'txtEasyCardVal')
 
-        # 已登錄 / 排除卡號
-        self.cardRecorded = cfg.as_list("cardRecorded") or []
-        self.excludeCard = cfg.as_list("excludeCard") or []
+        # 已登錄 / 排除卡號（安全取值，排除空字串）
+        self.cardRecorded = self._parse_optional_list(cfg, 'cardRecorded')
+        self.excludeCard = self._parse_optional_list(cfg, 'excludeCard')
 
         # 開始時間
         self._parse_start_time(cfg)
 
         # 驗證卡片數量一致
         self._validate()
+
+    def _parse_list_field(self, cfg, key):
+        """解析列表型欄位，每個元素用 ast.literal_eval 轉成實際 list"""
+        try:
+            raw = cfg.as_list(key) or []
+        except KeyError:
+            return []
+        result = []
+        for item in raw:
+            item = item.strip()
+            if not item:
+                continue
+            try:
+                parsed = ast.literal_eval(item)
+                if isinstance(parsed, list):
+                    result.append(parsed)
+                else:
+                    result.append(item)
+            except (ValueError, SyntaxError):
+                result.append(item)
+        return result
+
+    def _parse_optional_list(self, cfg, key):
+        """解析可選列表欄位，排除空字串與 KeyError"""
+        try:
+            raw = cfg.as_list(key) or []
+        except KeyError:
+            return []
+        return [x for x in raw if x.strip()]
 
     def _parse_start_time(self, cfg):
         """解析開始時間"""
